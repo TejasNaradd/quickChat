@@ -5,82 +5,101 @@ import { createToken } from "../lib/utils.js";
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 
-
 //signup new user
-export const signup=async (req,res)=>{
-    const {fullName,email,password,bio}=req.body;
+export const signup = async (req, res) => {
+  const { fullName, email, password, bio } = req.body;
 
-    try{
-        if(!fullName || !email || !password || !bio){
-            return res.json({success:false,message:"Missing Details"})
-        }
-        const user=await User.findOne({email}); //user already exists
-        if(user){
-            return res.json({success:false,message:"User already exists"});
-        }
-
-        const salt=await bcrypt.genSalt(10);
-        const hashedPassword=await bcrypt.hash(password,salt);
-
-        const newUser=await User.create({
-            fullName,
-            email,
-            password:hashedPassword,
-            bio
-        });
-
-        const token=createToken(newUser._id);
-        res.json({success:true,userData:newUser,token,message:"Account Created Successfully"});
+  try {
+    if (!fullName || !email || !password || !bio) {
+      return res.json({ success: false, message: "Missing Details" });
     }
-    catch(error){
-        console.log(error.message);
-        res.json({success:false,message:error.message});
+    const user = await User.findOne({ email }); //user already exists
+    if (user) {
+      return res.json({ success: false, message: "User already exists" });
     }
-}
+
+      if (password.length < 6) {
+      return res.json({
+        success: false,
+        message: "Password must contains min 6 characters",
+      });
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = await User.create({
+      fullName,
+      email,
+      password: hashedPassword,
+      bio,
+    });
+
+    const token = createToken(newUser._id);
+    res.json({
+      success: true,
+      userData: newUser,
+      token,
+      message: "Account Created Successfully",
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
 
 //For Login User
-export const login=async (req,res)=>{
-    try{
-        const {email,password}=req.body;
-        const userData=await User.findOne({email});
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const userData = await User.findOne({ email });
 
-        const isPasswordCorrect=await bcrypt.compare(password,userData.password); //compare hashed password
+    const isPasswordCorrect = await bcrypt.compare(password, userData.password); //compare hashed password
 
-        if(!isPasswordCorrect){
-            return res.json({success:false,message:"Invalid Credentials"});
-        }
-
-        const token=createToken(userData._id);
-        res.json({success:true,userData,token,message:"Login Successful"});
+    if (!isPasswordCorrect) {
+      return res.json({ success: false, message: "Invalid Credentials" });
     }
-    catch(error){
-        console.log(error.message);
-        res.json({success:false,message:error.message});
-    }
-}
+
+    const token = createToken(userData._id);
+    res.json({ success: true, userData, token, message: "Login Successful" });
+  } catch (error) {
+    console.log(error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
 //controller to check user authenticated or not
-export const checkAuth=async(req,res)=>{
-    res.json({success:true,user:req.user});
-}
+export const checkAuth = async (req, res) => {
+  res.json({ success: true, user: req.user });
+};
 
 //controller  to update user profile
-export const updateProfile=async(req,res)=>{
-    try{
-        const {profilePic,bio,fullName}=req.body;
+export const updateProfile = async (req, res) => {
+  try {
+    const { profilePic, bio, fullName } = req.body;
 
-        const userId=req.user._id;
-        let updatedUser;
+    const userId = req.user._id;
+    let updatedUser;
 
-        if(!profilePic){
-          updatedUser=await User.findByIdAndUpdate(userId,{bio,fullName},{new:true});
-        }else{
-            const upload=await cloudinary.uploader.upload(profilePic);
-            updatedUser=await User.findByIdAndUpdate(userId,{profilePic:upload.secure_url,bio,fullName},{new:true});
-        }
-        res.json({success:true,user:updatedUser,message:"Profile Updated Successfully"});
+    if (!profilePic) {
+      updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { bio, fullName },
+        { new: true }
+      );
+    } else {
+      const upload = await cloudinary.uploader.upload(profilePic);
+      updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { profilePic: upload.secure_url, bio, fullName },
+        { new: true }
+      );
     }
-    catch(error){
-        console.log(error.message);
-        res.json({success:false,message:error.message});
-    }
-}
+    res.json({
+      success: true,
+      user: updatedUser,
+      message: "Profile Updated Successfully",
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
