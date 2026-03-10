@@ -59,7 +59,7 @@ const ChatContainer = () => {
           
         </p>
         <img onClick={()=>
-          setSelectedUser(null)} src={assets.arrow_icon} alt="" className='md:hidden max-w-7' />
+          setSelectedUser(null)} src={assets.arrow_icon} alt="" className=' max-w-7' />
           <img src={assets.help_icon} alt="" className='md:hidden max-w-5' />
       </div>
       {/* chat area */}
