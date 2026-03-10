@@ -13,12 +13,12 @@ export const signup = async (req, res) => {
     if (!fullName || !email || !password || !bio) {
       return res.json({ success: false, message: "Missing Details" });
     }
-    const user = await User.findOne({ email }); //user already exists
+    const user = await User.findOne({ email });
     if (user) {
       return res.json({ success: false, message: "User already exists" });
     }
 
-      if (password.length < 6) {
+    if (password.length < 6) {
       return res.json({
         success: false,
         message: "Password must contains min 6 characters",
@@ -51,9 +51,20 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    // ✅ Check if email and password are provided
+    if (!email || !password) {
+      return res.json({ success: false, message: "Missing Details" });
+    }
+
     const userData = await User.findOne({ email });
 
-    const isPasswordCorrect = await bcrypt.compare(password, userData.password); //compare hashed password
+    // ✅ Check if user exists
+    if (!userData) {
+      return res.json({ success: false, message: "Invalid Credentials" });
+    }
+
+    const isPasswordCorrect = await bcrypt.compare(password, userData.password);
 
     if (!isPasswordCorrect) {
       return res.json({ success: false, message: "Invalid Credentials" });
@@ -66,12 +77,13 @@ export const login = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
 //controller to check user authenticated or not
 export const checkAuth = async (req, res) => {
   res.json({ success: true, user: req.user });
 };
 
-//controller  to update user profile
+//controller to update user profile
 export const updateProfile = async (req, res) => {
   try {
     const { profilePic, bio, fullName } = req.body;
